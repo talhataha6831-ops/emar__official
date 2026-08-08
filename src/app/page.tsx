@@ -1,9 +1,11 @@
 import TopAnnouncementBar from '@/components/TopAnnouncementBar'
 import StickyGlassHeader from '@/components/StickyGlassHeader'
 import CinematicHero from '@/components/Hero/CinematicHero'
-import ProductCard from '@/components/ProductCard'
+import ProductGrid from '@/components/ProductGrid'
 import VIPNewsletter from '@/components/VIPNewsletter'
 import FloatingConciergeWidget from '@/components/FloatingConciergeWidget'
+import ReviewsCarousel from '@/components/ReviewsCarousel'
+import Footer from '@/components/Footer'
 
 export default function Home() {
   return (
@@ -15,13 +17,17 @@ export default function Home() {
 
         <section className="max-w-7xl mx-auto px-6 py-12">
           <h2 className="text-3xl font-serif text-emar-ivory mb-6">THE EMAR COLLECTION</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {/* Placeholder product cards; replace with fetched products */}
-            <ProductCard />
-            <ProductCard />
-            <ProductCard />
-            <ProductCard />
-          </div>
+          <ProductGrid />
+        </section>
+
+        <section className="max-w-7xl mx-auto px-6 py-12">
+          <h2 className="text-3xl font-serif text-emar-ivory mb-6">MOST WANTED — BEST SELLERS</h2>
+          <ProductGrid filter="best" />
+        </section>
+
+        <section className="max-w-7xl mx-auto px-6 py-12">
+          <h2 className="text-3xl font-serif text-emar-ivory mb-6">SIGNATURE BY EMAR</h2>
+          <ProductGrid filter="signature" />
         </section>
 
         <section className="max-w-7xl mx-auto px-6 py-12">
@@ -30,8 +36,12 @@ export default function Home() {
           <button className="mt-6 inline-block px-6 py-3 border border-emar-gold text-emar-ivory hover:bg-emar-gold transition">DISCOVER OUR STORY →</button>
         </section>
 
+        <ReviewsCarousel />
+
         <VIPNewsletter />
       </main>
+
+      <Footer />
 
       <FloatingConciergeWidget />
     </>
