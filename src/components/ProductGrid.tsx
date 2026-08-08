@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/integrations/supabase/client'
 import ProductCardAdvanced from '@/components/ProductCardAdvanced'
 import FiltersBar from '@/components/FiltersBar'
@@ -6,7 +7,19 @@ import FiltersBar from '@/components/FiltersBar'
 export default function ProductGrid({ filter }: { filter?: 'featured' | 'best' | 'signature' | null }){
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(filter ?? null)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const initial = searchParams?.get('filter') as string | null || filter ?? null
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(initial)
+
+  useEffect(()=>{
+    // sync url when filter changes
+    const params = new URLSearchParams(Array.from(searchParams ?? new URLSearchParams()))
+    if(selectedFilter) params.set('filter', selectedFilter)
+    else params.delete('filter')
+    const q = params.toString()
+    router.replace(`${window.location.pathname}${q ? '?' + q : ''}`)
+  },[selectedFilter])
 
   useEffect(()=>{
     const load = async ()=>{

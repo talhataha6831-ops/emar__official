@@ -1,17 +1,29 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
-import ProductCardAdvanced from './ProductCardAdvanced'
+import ProductCardAdvanced from '@/components/ProductCardAdvanced'
 
 export default function RelatedProducts({ productId, categoryId }: { productId: string, categoryId?: string }){
   const [related, setRelated] = useState<any[]>([])
 
   useEffect(()=>{
     const load = async ()=>{
-      let q = supabase.from('products').select('*').limit(4).order('created_at', {ascending:false})
-      if(categoryId) q = (q as any).eq('category_id', categoryId)
+      // prefer same category, fallback to recent products
+      let q
+      if(categoryId){
+        q = supabase.from('products').select('*, images').eq('category_id', categoryId).order('created_at', {ascending:false}).limit(8)
+      } else {
+        q = supabase.from('products').select('*, images').order('created_at', {ascending:false}).limit(8)
+      }
       const { data } = await (q as any)
-      const filtered = (data ?? []).filter((p:any)=>p.id !== productId).slice(0,4)
-      setRelated(filtered)
+      const candidates = (data ?? []).filter((p:any)=>p.id !== productId)
+      // naive similarity: prefer same category and share words in title
+      const targetTitle = ''
+      const scored = candidates.map((c:any)=>({
+        item: c,
+        score: (c.category_id === categoryId ? 2 : 0) + (c.title && targetTitle ? c.title.split(' ').filter((w:string)=> targetTitle.includes(w)).length : 0)
+      })).sort((a:any,b:any)=>b.score - a.score)
+
+      setRelated(scored.slice(0,4).map((s:any)=>s.item))
     }
     load()
   },[productId, categoryId])
