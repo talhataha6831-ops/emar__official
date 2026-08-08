@@ -1,45 +1,24 @@
 import { supabase } from '@/integrations/supabase/client'
 
-interface WhatsAppOrderPayload {
-  productId: string
-  productName: string
-  variantDetails?: string
-  price: number
-  customerName?: string
-  customerPhone?: string
-}
-
-export const executeWhatsAppOrder = async (payload: WhatsAppOrderPayload) => {
-  const targetPhone = (process.env.NEXT_PUBLIC_EMAR_WHATSAPP_TARGET || '923257851162').replace('+','')
+export const executeConcierge = async (opts: { type: 'order' | 'vip' }) => {
   try{
-    await supabase.from('whatsapp_orders').insert({
-      product_id: payload.productId,
-      product_name: payload.productName,
-      variant_details: payload.variantDetails ?? 'Standard',
-      price: payload.price,
-      customer_name: payload.customerName ?? null,
-      customer_phone: payload.customerPhone ?? null,
-      status: 'INTENT_CLICKED',
+    const msg = opts.type === 'order' ? 'VIP_DIRECT_ORDER' : 'VIP_CONCIERGE_CARE'
+    // call the server-side /api/whatsapp-contact to log and receive waUrl
+    const res = await fetch('/api/whatsapp-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: opts.type })
     })
+    const json = await res.json()
+    if(json?.waUrl){
+      window.open(json.waUrl, '_blank', 'noopener,noreferrer')
+    } else {
+      const fallback = opts.type === 'order' ? (process.env.NEXT_PUBLIC_EMAR_WHATSAPP_TARGET || '+923257851162') : (process.env.NEXT_PUBLIC_EMAR_VIP_WHATSAPP || '+923258581251')
+      window.open(`https://wa.me/${String(fallback).replace('+','')}`, '_blank')
+    }
   }catch(err){
-    console.error('Supabase insert failed', err)
-  }
-
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : ''
-  const message = [
-    '👑 *EMAR LUXURY ORDER INQUIRY*',
-    `📌 *Product:* ${payload.productName}`,
-    `🏷️ *Variant:* ${payload.variantDetails ?? 'Standard'}`,
-    `💰 *Price:* Rs. ${payload.price.toLocaleString()}`,
-    `🔗 *Product Link:* ${currentUrl}`,
-    '',
-    '_Please assist me with instant order confirmation and payment options._'
-  ].join('\n')
-
-  const encoded = encodeURIComponent(message)
-  const waUrl = `https://wa.me/${targetPhone}?text=${encoded}`
-
-  if(typeof window !== 'undefined'){
-    window.open(waUrl, '_blank', 'noopener,noreferrer')
+    console.error(err)
+    const fallback = opts.type === 'order' ? (process.env.NEXT_PUBLIC_EMAR_WHATSAPP_TARGET || '+923257851162') : (process.env.NEXT_PUBLIC_EMAR_VIP_WHATSAPP || '+923258581251')
+    window.open(`https://wa.me/${String(fallback).replace('+','')}`, '_blank')
   }
 }
